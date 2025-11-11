@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Cesium Blockbild (3D Block Model) POC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.135/Build/Cesium/Widgets/widgets.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.7.0/ol.css" />
+  <link rel="stylesheet" href="./styles.css" />
+
+  <script defer src="https://cesium.com/downloads/cesiumjs/releases/1.135/Build/Cesium/Cesium.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/ol@v10.7.0/dist/ol.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <main class="app">
+    <aside id="map-panel" class="map-panel" aria-label="Area selection map">
+      <header id="map-panel-header" class="map-panel__header">
+        Select Area <span>(Click to start)</span>
+      </header>
+      <section id="map-2d" class="map-panel__canvas" aria-label="2D overview map"></section>
+      <button id="map-panel-resizer" class="map-panel__resizer" type="button" aria-label="Resize 2D map panel">
+        <svg class="map-panel__resizer-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
+          <path d="M12 4v6M9.5 6.5L12 4l2.5 2.5"></path>
+          <path d="M20 12h-6M17.5 9.5L20 12l-2.5 2.5"></path>
+          <path d="M12 20v-6M14.5 17.5L12 20l-2.5-2.5"></path>
+          <path d="M4 12h6M6.5 14.5L4 12l2.5-2.5"></path>
+        </svg>
+      </button>
+    </aside>
+
+    <section id="info-panel" class="info-panel" role="status" aria-live="polite">
+      <h1 class="info-panel__title">Hi there!</h1>
+  <p class="info-panel__lead">Use the 2D map to outline a square you'd like to explore in 3D.</p>
+      <ol class="info-panel__steps">
+        <li>Click once to drop the first corner.</li>
+        <li>Click a second time to confirm the opposite corner.</li>
+      </ol>
+      <p><small>Tips: Right-click any time before the second click to abort. Resize 2D map panel by dragging the bottom-left corner.</small></p>
+    </section>
+
+    <section id="cesiumContainer" class="viewer" aria-label="3D block viewer"></section>
+  </main>
+
+  <noscript>
+    <p class="no-script">This demo requires JavaScript to run. Please enable it to view the 3D scene.</p>
+  </noscript>
+</body>
+</html>
