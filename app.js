@@ -15,8 +15,8 @@
   });
 
   const PANEL_MESSAGE = Object.freeze({
-    idle: 'Select Area <span>(Click to start)</span>',
-    awaitingSecond: 'Click to set 2nd corner <span>(Right-click to abort)</span>',
+    idle: 'Draw Area <span>(Tap or click and drag)</span>',
+    drawing: '<span>Release to build the block</span>',
     generating: '<span>Generating 3D Block...</span>',
     error: '<span>Something went wrong. Refresh the page.</span>',
   });
@@ -35,8 +35,7 @@
     wallEntities: [],
     map: null,
     vectorSource: null,
-    previewFeature: null,
-    firstClick: null,
+    drawInteraction: null,
     isGenerating: false,
     basemapLayers: {
       swissTopo: null,
@@ -65,8 +64,8 @@
   function initialize() {
     dom.header = document.getElementById('map-panel-header');
     dom.infoPanel = document.getElementById('info-panel');
-  dom.mapPanel = document.getElementById('map-panel');
-  dom.mapResizer = document.getElementById('map-panel-resizer');
+    dom.mapPanel = document.getElementById('map-panel');
+    dom.mapResizer = document.getElementById('map-panel-resizer');
 
     showInfoPanel();
     setPanelMessage('idle');
@@ -242,16 +241,73 @@
       controls: [],
     });
 
-    registerMapInteractions();
+    const geometryFunction = createSquareGeometryFunction();
+
+    const drawInteraction = new ol.interaction.Draw({
+      source: state.vectorSource,
+      type: 'Circle',
+      geometryFunction,
+      maxPoints: 2,
+      stopClick: true,
+    });
+
+    drawInteraction.on('drawstart', handleDrawStart);
+    drawInteraction.on('drawend', handleDrawEnd);
+
+    state.drawInteraction = drawInteraction;
+    state.map.addInteraction(drawInteraction);
+
     updateBasemap();
     state.map.on('moveend', updateBasemap);
     requestMapSizeUpdate();
   }
 
-  function registerMapInteractions() {
-    state.map.on('click', handleMapClick);
-    state.map.on('pointermove', handlePointerMove);
-    state.map.on('contextmenu', handleContextMenu);
+  function handleDrawStart(event) {
+    if (!state.drawInteraction || state.isGenerating) {
+      if (state.drawInteraction) {
+        state.drawInteraction.abortDrawing();
+      }
+      return;
+    }
+
+    state.vectorSource.clear();
+    setPanelMessage('drawing');
+  }
+
+  async function handleDrawEnd(event) {
+    if (!state.drawInteraction) {
+      return;
+    }
+
+    const feature = event.feature;
+    const geometry = feature.getGeometry();
+
+    const extent3857 = geometry.getExtent();
+    const width = extent3857[2] - extent3857[0];
+    const height = extent3857[3] - extent3857[1];
+    const maxDimension = Math.max(width, height);
+
+    if (maxDimension < 25) {
+      state.vectorSource.removeFeature(feature);
+      setPanelMessage('idle');
+      return;
+    }
+
+    state.isGenerating = true;
+    setPanelMessage('generating');
+    state.drawInteraction.setActive(false);
+
+    try {
+      const extent4326 = toGeographicExtent(extent3857);
+      await generateBlock(extent4326, APP_CONFIG.fidelity);
+      setPanelMessage('idle');
+    } catch (error) {
+      console.error('Error generating block:', error);
+      setPanelMessage('error');
+    } finally {
+      state.isGenerating = false;
+      state.drawInteraction.setActive(true);
+    }
   }
 
   function setupMapPanelResizer() {
@@ -327,87 +383,20 @@
     requestMapSizeUpdate();
   }
 
-  async function handleMapClick(event) {
-    event.preventDefault();
+  function createSquareGeometryFunction() {
+    return (coordinates, geometry) => {
+      const start = coordinates[0];
+      const end = coordinates[1] ?? coordinates[0];
 
-    if (state.isGenerating) {
-      return;
-    }
+      const { coordinates: squareCoords } = buildSquare(start, end);
 
-    if (!state.firstClick) {
-      beginSelection(event.coordinate);
-      return;
-    }
+      if (!geometry) {
+        geometry = new ol.geom.Polygon([]);
+      }
 
-    await finalizeSelection(event.coordinate);
-  }
-
-  function beginSelection(coordinate) {
-    state.firstClick = coordinate;
-    state.vectorSource.clear();
-
-    state.previewFeature = new ol.Feature({
-      geometry: new ol.geom.Polygon([]),
-    });
-
-    state.vectorSource.addFeature(state.previewFeature);
-    setPanelMessage('awaitingSecond');
-  }
-
-  async function finalizeSelection(coordinate) {
-    if (!state.firstClick || !state.previewFeature) {
-      return;
-    }
-
-    const square = buildSquare(state.firstClick, coordinate);
-    updatePreviewGeometry(square.coordinates);
-
-    state.isGenerating = true;
-    setPanelMessage('generating');
-
-    state.firstClick = null;
-    state.previewFeature = null;
-
-    try {
-      const extent = toGeographicExtent(square.extent);
-      await generateBlock(extent, APP_CONFIG.fidelity);
-      setPanelMessage('idle');
-    } catch (error) {
-      console.error('Error generating block:', error);
-      setPanelMessage('error');
-    } finally {
-      state.isGenerating = false;
-    }
-  }
-
-  function handlePointerMove(event) {
-    if (!state.firstClick || !state.previewFeature || state.isGenerating) {
-      return;
-    }
-
-    const square = buildSquare(state.firstClick, event.coordinate);
-    updatePreviewGeometry(square.coordinates);
-  }
-
-  function handleContextMenu(event) {
-    if (!state.firstClick || state.isGenerating) {
-      return;
-    }
-
-    event.preventDefault();
-    cancelSelection();
-  }
-
-  function cancelSelection() {
-    state.firstClick = null;
-
-    if (state.previewFeature) {
-      state.vectorSource.removeFeature(state.previewFeature);
-      state.previewFeature = null;
-    }
-
-    state.vectorSource.clear();
-    setPanelMessage('idle');
+      geometry.setCoordinates([squareCoords]);
+      return geometry;
+    };
   }
 
   function buildSquare(first, second) {
@@ -435,14 +424,6 @@
     ]);
 
     return { coordinates, extent };
-  }
-
-  function updatePreviewGeometry(coordinates) {
-    if (!state.previewFeature) {
-      return;
-    }
-
-    state.previewFeature.getGeometry().setCoordinates([coordinates]);
   }
 
   function toGeographicExtent(extent) {

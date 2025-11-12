@@ -224,6 +224,14 @@ body {
   }
 
   .map-panel__resizer {
-    display: none;
+    width: 2.4rem;
+    height: 2.4rem;
+    left: 0.5rem;
+    bottom: 0.5rem;
+  }
+
+  .map-panel__resizer-icon {
+    width: 1.35rem;
+    height: 1.35rem;
   }
 }
