@@ -3,13 +3,13 @@
 
   const APP_CONFIG = Object.freeze({
     fidelity: 100,
-    maxSquareSize: 30_000,
+    maxSquareSize: 20_000,
     defaultCenter: [8.2275, 46.8182],
     defaultZoom: 8,
     mapPanel: {
-      minWidth: 220,
+      minWidth: 120,
       maxWidth: 880,
-      minHeight: 220,
+      minHeight: 120,
       maxHeight: 880,
     },
   });
