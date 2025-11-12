@@ -3,6 +3,7 @@ The german word "Blockbild" can describe a map showing a section of terrain as i
 
 [Check out the demo here on github pages.](https://folinimarc.github.io/blockbild-cesiumjs/)
 
-> Disclaimer: This code was created as a POC in short time with a lot AI help.
-> It is in no way intended to be used in production.
-> To run this yourself, you need your own [Cesium Ion access token](https://cesium.com/learn/ion/cesium-ion-access-tokens/).
+> Disclaimer: 
+> - This code was created as a POC in short time with a lot AI help. It is in no way intended to be used in production.
+> - To run this yourself, you need your own [Cesium Ion access token](https://cesium.com/learn/ion/cesium-ion-access-tokens/).
+> - Rendering issues on Firefox Android are a [known issue](https://github.com/CesiumGS/cesium/issues/12853) and will hopefully be fixed soon.
