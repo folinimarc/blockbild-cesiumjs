@@ -155,6 +155,7 @@
       scene.globe.depthTestAgainstTerrain = true;
       scene.globe.enableLighting = false;
       scene.globe.show = false;
+      scene.globe.maximumScreenSpaceError = 1; // Force higher LOD to cover whole Blockbild area
     }
 
     scene.skyBox = undefined;
