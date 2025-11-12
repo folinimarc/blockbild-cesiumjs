@@ -16,7 +16,7 @@
 
   const PANEL_MESSAGE = Object.freeze({
     idle: 'Draw Area <span>(Tap or click and drag)</span>',
-    drawing: '<span>Release to build the block</span>',
+    drawing: 'Release to build the block <span>Tap outside the map to cancel</span>',
     generating: '<span>Generating 3D Block...</span>',
     error: '<span>Something went wrong. Refresh the page.</span>',
   });
@@ -37,6 +37,8 @@
     vectorSource: null,
     drawInteraction: null,
     isGenerating: false,
+    isDrawingActive: false,
+    outsideCancelHandler: null,
     basemapLayers: {
       swissTopo: null,
       osm: null,
@@ -253,6 +255,7 @@
 
     drawInteraction.on('drawstart', handleDrawStart);
     drawInteraction.on('drawend', handleDrawEnd);
+    drawInteraction.on('drawabort', handleDrawAbort);
 
     state.drawInteraction = drawInteraction;
     state.map.addInteraction(drawInteraction);
@@ -271,6 +274,8 @@
     }
 
     state.vectorSource.clear();
+    state.isDrawingActive = true;
+    registerOutsideCancelListener();
     setPanelMessage('drawing');
   }
 
@@ -278,6 +283,8 @@
     if (!state.drawInteraction) {
       return;
     }
+
+    finalizeDrawingSession();
 
     const feature = event.feature;
     const geometry = feature.getGeometry();
@@ -307,6 +314,54 @@
     } finally {
       state.isGenerating = false;
       state.drawInteraction.setActive(true);
+    }
+  }
+
+  function handleDrawAbort() {
+    finalizeDrawingSession({ aborted: true });
+  }
+
+  function registerOutsideCancelListener() {
+    if (state.outsideCancelHandler || !dom.mapPanel) {
+      return;
+    }
+
+    const handler = (event) => {
+      if (!state.isDrawingActive || !state.drawInteraction) {
+        return;
+      }
+
+      const target = event.target;
+      if (target instanceof Node && dom.mapPanel.contains(target)) {
+        return;
+      }
+
+      detachOutsideCancelListener();
+      state.drawInteraction.abortDrawing();
+    };
+
+    document.addEventListener('pointerdown', handler);
+    state.outsideCancelHandler = handler;
+  }
+
+  function detachOutsideCancelListener() {
+    if (!state.outsideCancelHandler) {
+      return;
+    }
+
+    document.removeEventListener('pointerdown', state.outsideCancelHandler);
+    state.outsideCancelHandler = null;
+  }
+
+  function finalizeDrawingSession({ aborted = false } = {}) {
+    state.isDrawingActive = false;
+    detachOutsideCancelListener();
+
+    if (aborted && !state.isGenerating) {
+      if (state.vectorSource) {
+        state.vectorSource.clear();
+      }
+      setPanelMessage('idle');
     }
   }
 
