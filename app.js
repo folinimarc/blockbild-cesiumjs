@@ -28,6 +28,7 @@
     infoPanel: null,
     mapPanel: null,
     mapResizer: null,
+    viewer: null,
   };
 
   const state = {
@@ -70,6 +71,7 @@
     dom.infoPanel = document.getElementById('info-panel');
     dom.mapPanel = document.getElementById('map-panel');
     dom.mapResizer = document.getElementById('map-panel-resizer');
+  dom.viewer = document.getElementById('cesiumContainer');
 
     showInfoPanel();
     setPanelMessage('idle');
@@ -111,6 +113,75 @@
     }
     dom.infoPanel.remove();
     dom.infoPanel = null;
+  }
+
+  function getViewerElement() {
+    if (dom.viewer) {
+      return dom.viewer;
+    }
+
+    if (state.viewer && state.viewer.container) {
+      dom.viewer = state.viewer.container;
+      return dom.viewer;
+    }
+
+    return null;
+  }
+
+  function setViewerVisibility(visible) {
+    const element = getViewerElement();
+
+    if (!element) {
+      return Promise.resolve();
+    }
+
+    const targetClass = 'is-visible';
+    const isVisible = element.classList.contains(targetClass);
+
+    if (visible === isVisible) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      let fallbackId = null;
+      let resolved = false;
+
+      function cleanup() {
+        if (resolved) {
+          return;
+        }
+
+        resolved = true;
+        element.removeEventListener('transitionend', handleTransitionEnd);
+        if (fallbackId !== null) {
+          window.clearTimeout(fallbackId);
+        }
+        resolve();
+      }
+
+      function handleTransitionEnd(event) {
+        if (event.propertyName !== 'opacity') {
+          return;
+        }
+
+        cleanup();
+      }
+
+      element.addEventListener('transitionend', handleTransitionEnd);
+      fallbackId = window.setTimeout(cleanup, 320);
+
+      requestAnimationFrame(() => {
+        element.classList.toggle(targetClass, visible);
+      });
+    });
+  }
+
+  function hideViewer() {
+    return setViewerVisibility(false);
+  }
+
+  function showViewer() {
+    return setViewerVisibility(true);
   }
 
   function revealCesiumScene() {
@@ -522,22 +593,28 @@
     const { west, south, east, north } = extent;
     console.log(`Generating block for: ${west}, ${south}, ${east}, ${north}`);
 
-    clearExistingGeometry();
-    applyTerrainClipping(extent);
-    await orientCamera(extent);
+    await hideViewer();
 
-    const interpolatedSegments = createInterpolatedWallSegments(extent, fidelity);
-    const sampledSegments = await sampleTerrainForSegments(interpolatedSegments);
+    try {
+      clearExistingGeometry();
+      applyTerrainClipping(extent);
+      await orientCamera(extent);
 
-    const baseAltitude = deriveBaseAltitude(sampledSegments);
+      const interpolatedSegments = createInterpolatedWallSegments(extent, fidelity);
+      const sampledSegments = await sampleTerrainForSegments(interpolatedSegments);
 
-    Object.entries(sampledSegments).forEach(([direction, segment]) => {
-      createSidePolygon(segment, direction, baseAltitude);
-    });
+      const baseAltitude = deriveBaseAltitude(sampledSegments);
 
-    if (!state.hasGeneratedBlock) {
-      state.hasGeneratedBlock = true;
-      revealCesiumScene();
+      Object.entries(sampledSegments).forEach(([direction, segment]) => {
+        createSidePolygon(segment, direction, baseAltitude);
+      });
+
+      if (!state.hasGeneratedBlock) {
+        state.hasGeneratedBlock = true;
+        revealCesiumScene();
+      }
+    } finally {
+      await showViewer();
     }
   }
 
@@ -596,33 +673,19 @@
       );
 
       const zoomRange = diagonal * 1.5;
+      const heading = Cesium.Math.toRadians(0);
+      const pitch = Cesium.Math.toRadians(-45);
 
-      state.viewer.camera.flyTo({
-        destination: targetPoint,
-        orientation: {
-          heading: Cesium.Math.toRadians(0),
-          pitch: Cesium.Math.toRadians(-45),
-          roll: 0,
-        },
-        duration: 1.5,
-      });
+      state.viewer.camera.lookAt(
+        targetPoint,
+        new Cesium.HeadingPitchRange(heading, pitch, zoomRange)
+      );
 
-      setTimeout(() => {
-        state.viewer.camera.lookAt(
-          targetPoint,
-          new Cesium.HeadingPitchRange(
-            Cesium.Math.toRadians(0),
-            Cesium.Math.toRadians(-45),
-            zoomRange
-          )
-        );
-
-        const controller = state.viewer.scene.screenSpaceCameraController;
-        controller.enablePan = false;
-        controller.enableTilt = false;
-        controller.minimumZoomDistance = 500;
-        controller.maximumZoomDistance = zoomRange * 3;
-      }, 1600);
+      const controller = state.viewer.scene.screenSpaceCameraController;
+      controller.enablePan = false;
+      controller.enableTilt = false;
+      controller.minimumZoomDistance = 500;
+      controller.maximumZoomDistance = zoomRange * 3;
     } catch (error) {
       console.error('Error setting camera view:', error);
     }
