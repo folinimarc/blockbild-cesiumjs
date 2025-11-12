@@ -133,6 +133,10 @@
       shadows: false,
       animation: false,
       timeline: false,
+      homeButton: false,
+      sceneModePicker: false,
+      navigationHelpButton: false,
+      navigationInstructionsInitiallyVisible: false,
       baseLayerPicker: false,
     });
 
