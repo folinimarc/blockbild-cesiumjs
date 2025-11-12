@@ -7,10 +7,10 @@
     defaultCenter: [8.2275, 46.8182],
     defaultZoom: 8,
     mapPanel: {
-      minWidth: 240,
-      maxWidth: 560,
+      minWidth: 220,
+      maxWidth: 880,
       minHeight: 220,
-      maxHeight: 520,
+      maxHeight: 880,
     },
   });
 
