@@ -14,6 +14,8 @@
     },
   });
 
+  const URL_PARAM_EXTENT = 'extent';
+
   const PANEL_MESSAGE = Object.freeze({
     idle: 'Draw Area <span>(Tap or click and drag)</span>',
     drawing: 'Release to build the block <span>Tap outside the map to cancel</span>',
@@ -267,6 +269,14 @@
     updateBasemap();
     state.map.on('moveend', updateBasemap);
     requestMapSizeUpdate();
+
+    const initialExtent = getExtentFromUrl();
+    if (initialExtent) {
+      bootstrapExtentFromUrl(initialExtent).catch((error) => {
+        console.error('Error bootstrapping extent from URL:', error);
+        setPanelMessage('error');
+      });
+    }
   }
 
   function handleDrawStart(event) {
@@ -311,6 +321,7 @@
     try {
       const extent4326 = toGeographicExtent(extent3857);
       await generateBlock(extent4326, APP_CONFIG.fidelity);
+      updateUrlExtent(extent4326);
       setPanelMessage('idle');
     } catch (error) {
       console.error('Error generating block:', error);
@@ -365,6 +376,7 @@
       if (state.vectorSource) {
         state.vectorSource.clear();
       }
+      updateUrlExtent(null);
       setPanelMessage('idle');
     }
   }
@@ -720,6 +732,108 @@
       return value;
     }
     return value.charAt(0).toUpperCase() + value.slice(1);
+  }
+
+  function serializeExtentForUrl(extent) {
+    return [extent.west, extent.south, extent.east, extent.north]
+      .map((value) => Number.parseFloat(value).toFixed(5))
+      .join(',');
+  }
+
+  function parseExtentParam(value) {
+    if (!value) {
+      return null;
+    }
+
+    const parts = value.split(',').map((part) => Number.parseFloat(part));
+    if (parts.length !== 4 || parts.some((part) => Number.isNaN(part))) {
+      return null;
+    }
+
+    const [west, south, east, north] = parts;
+    if (west >= east || south >= north) {
+      return null;
+    }
+
+    if (
+      west < -180 ||
+      east > 180 ||
+      south < -90 ||
+      north > 90
+    ) {
+      return null;
+    }
+
+    return { west, south, east, north };
+  }
+
+  function updateUrlExtent(extent) {
+    const url = new URL(window.location.href);
+
+    if (!extent) {
+      url.searchParams.delete(URL_PARAM_EXTENT);
+    } else {
+      url.searchParams.set(URL_PARAM_EXTENT, serializeExtentForUrl(extent));
+    }
+
+    const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+    history.replaceState(null, '', nextUrl);
+  }
+
+  function getExtentFromUrl() {
+    const url = new URL(window.location.href);
+    const raw = url.searchParams.get(URL_PARAM_EXTENT);
+    const extent = parseExtentParam(raw);
+
+    if (!extent && raw) {
+      updateUrlExtent(null);
+    }
+
+    return extent;
+  }
+
+  function createFeatureFromExtent(extent) {
+    const extentArray = [extent.west, extent.south, extent.east, extent.north];
+    const extent3857 = ol.proj.transformExtent(extentArray, 'EPSG:4326', 'EPSG:3857');
+    const polygon = ol.geom.Polygon.fromExtent(extent3857);
+    return new ol.Feature(polygon);
+  }
+
+  async function bootstrapExtentFromUrl(extent) {
+    if (!extent || !state.vectorSource || !state.map || !state.drawInteraction) {
+      return;
+    }
+
+    state.vectorSource.clear();
+    state.vectorSource.addFeature(createFeatureFromExtent(extent));
+
+    try {
+      const extentArray = [extent.west, extent.south, extent.east, extent.north];
+      const extent3857 = ol.proj.transformExtent(extentArray, 'EPSG:4326', 'EPSG:3857');
+      state.map.getView().fit(extent3857, {
+        duration: 0,
+        padding: [32, 32, 32, 32],
+        maxZoom: 14,
+      });
+    } catch (error) {
+      console.error('Error fitting map view for extent:', error);
+    }
+
+    state.isGenerating = true;
+    setPanelMessage('generating');
+    state.drawInteraction.setActive(false);
+
+    try {
+      await generateBlock(extent, APP_CONFIG.fidelity);
+      updateUrlExtent(extent);
+      setPanelMessage('idle');
+    } catch (error) {
+      console.error('Error generating block from URL extent:', error);
+      setPanelMessage('error');
+    } finally {
+      state.isGenerating = false;
+      state.drawInteraction.setActive(true);
+    }
   }
 
   function requestMapSizeUpdate() {
