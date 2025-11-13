@@ -5,12 +5,13 @@ const SWISS_EXTENT_LONLAT = [5.96, 45.82, 10.49, 47.81];
 
 /**
  * Creates the OpenLayers map controller handling drawing and basemap switching.
- * @param {{ dom: ReturnType<typeof import('./dom.js').queryDom>, setPanelMessage: Function, generateBlock: Function }} context
+ * @param {{ dom: ReturnType<typeof import('./dom.js').queryDom>, setPanelMessage: Function, generateBlock: Function, onBeforeNewBlock?: Function }} context
  */
 export function createMapController({
   dom,
   setPanelMessage,
   generateBlock,
+  onBeforeNewBlock,
 }) {
   let mapSizeUpdatePending = false;
 
@@ -152,6 +153,10 @@ export function createMapController({
     if (state.isGenerating) {
       state.drawInteraction.abortDrawing();
       return;
+    }
+
+    if (typeof onBeforeNewBlock === 'function') {
+      onBeforeNewBlock();
     }
 
     state.vectorSource.clear();

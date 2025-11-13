@@ -29,6 +29,7 @@ function initialize() {
       }
       return viewerController.generateBlock(extent, fidelity);
     },
+    onBeforeNewBlock: () => shareController.clearShareUrlParam(),
   });
 
   viewerController = createViewerController({

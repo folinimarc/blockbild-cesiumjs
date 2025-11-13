@@ -255,10 +255,23 @@ export function createShareController({ dom, state }) {
     showShareFeedback('');
   }
 
+  function clearShareUrlParam() {
+    const url = new URL(window.location.href);
+
+    if (!url.searchParams.has(URL_PARAM_SHARE)) {
+      return;
+    }
+
+    url.searchParams.delete(URL_PARAM_SHARE);
+    const nextUrl = `${url.origin}${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState(null, '', nextUrl);
+  }
+
   return {
     initialize,
     handleBlockGenerated,
     applyChallengeMode,
     getShareConfigFromUrl,
+    clearShareUrlParam,
   };
 }
