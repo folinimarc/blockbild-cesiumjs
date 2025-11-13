@@ -18,5 +18,5 @@ export const state = {
   shareOverlayOptions: {
     hideMap: false,
   },
-  isPuzzleMode: false,
+  isChallengeMode: false,
 };

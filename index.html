@@ -38,12 +38,8 @@
 
     <section id="info-panel" class="info-panel" role="status" aria-live="polite">
       <h1 class="info-panel__title">Hi there!</h1>
-  <p class="info-panel__lead">Use the 2D map to outline a square you'd like to explore in 3D.</p>
-      <ol class="info-panel__steps">
-        <li>Click once to drop the first corner.</li>
-        <li>Click a second time to confirm the opposite corner.</li>
-      </ol>
-  <p><small>Tip: Resize 2D map panel by dragging the bottom-left corner.</small></p>
+  <p class="info-panel__lead">Use the map to outline a square you'd like to explore in 3D. Resize map panel by dragging the bottom-left corner.</p>
+  <p><small>Note: Firefox Android experiences rendering issues. This will hopefully  be fixed soon.</small></p>
       <p class="info-panel__footer"><a href="https://github.com/folinimarc/blockbild-cesiumjs" target="_blank" rel="noreferrer noopener">View source on GitHub</a></p>
     </section>
 
@@ -63,16 +59,16 @@
         </div>
         <label class="share-overlay__option">
           <input id="share-hide-map" type="checkbox" />
-          <span>Hide 2D map (puzzle mode)</span>
+          <span>Challenge mode</span>
         </label>
-        <p class="share-overlay__hint">With puzzle mode, recipients will not see the map.</p>
+        <p class="share-overlay__hint">With challenge mode enabled, recipients will not see the 2D map.</p>
         <output id="share-feedback" class="share-overlay__feedback" role="status" aria-live="polite"></output>
       </section>
     </div>
   </main>
 
   <noscript>
-    <p class="no-script">This demo requires JavaScript to run. Please enable it to view the 3D scene.</p>
+    <p class="no-script">This application requires JavaScript to run.</p>
   </noscript>
 </body>
 </html>

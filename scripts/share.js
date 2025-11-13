@@ -2,7 +2,7 @@ import { URL_PARAM_SHARE } from './config.js';
 import { isValidExtent, normalizeExtent } from './extent.js';
 
 /**
- * Creates the share overlay controller responsible for link generation and puzzle mode.
+ * Creates the share overlay controller responsible for link generation and challenge mode.
  * @param {{ dom: ReturnType<typeof import('./dom.js').queryDom>, state: typeof import('./state.js').state }} context
  */
 export function createShareController({ dom, state }) {
@@ -30,12 +30,12 @@ export function createShareController({ dom, state }) {
     }
   }
 
-  function applyPuzzleMode(hideMap) {
-    state.isPuzzleMode = Boolean(hideMap);
+  function applyChallengeMode(hideMap) {
+    state.isChallengeMode = Boolean(hideMap);
     state.shareOverlayOptions.hideMap = Boolean(hideMap);
 
-    dom.mapPanel.classList.toggle('map-panel--hidden', state.isPuzzleMode);
-    dom.mapPlaceholder.classList.toggle('is-hidden', !state.isPuzzleMode);
+    dom.mapPanel.classList.toggle('map-panel--hidden', state.isChallengeMode);
+    dom.mapPlaceholder.classList.toggle('is-hidden', !state.isChallengeMode);
 
     updateShareAvailability();
   }
@@ -171,7 +171,7 @@ export function createShareController({ dom, state }) {
   }
 
   function updateShareAvailability() {
-    const shouldEnable = Boolean(state.currentExtent) && !state.isPuzzleMode;
+    const shouldEnable = Boolean(state.currentExtent) && !state.isChallengeMode;
     setShareButtonEnabled(shouldEnable);
   }
 
@@ -258,7 +258,7 @@ export function createShareController({ dom, state }) {
   return {
     initialize,
     handleBlockGenerated,
-    applyPuzzleMode,
+    applyChallengeMode,
     getShareConfigFromUrl,
   };
 }

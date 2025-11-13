@@ -80,15 +80,6 @@ body {
   color: rgba(226, 232, 240, 0.92);
 }
 
-.info-panel__steps {
-  margin: 0;
-  padding-left: 1.2rem;
-  display: grid;
-  gap: 0.4rem;
-  font-size: 0.95rem;
-  color: rgba(203, 213, 225, 0.95);
-}
-
 .info-panel__hint {
   margin: 0;
   font-size: 0.85rem;

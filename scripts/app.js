@@ -18,7 +18,7 @@ function initialize() {
 
   const shareConfig = shareController.getShareConfigFromUrl();
   const pendingSharedExtent = shareConfig?.extent ?? null;
-  shareController.applyPuzzleMode(shareConfig?.hideMap ?? false);
+  shareController.applyChallengeMode(shareConfig?.hideMap ?? false);
 
   const mapController = createMapController({
     dom,
