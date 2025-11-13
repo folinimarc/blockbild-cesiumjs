@@ -11,7 +11,7 @@
 
   <script defer src="https://cesium.com/downloads/cesiumjs/releases/1.135/Build/Cesium/Cesium.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/ol@v10.7.0/dist/ol.js"></script>
-  <script defer src="./app.js"></script>
+  <script type="module" src="./scripts/app.js"></script>
 </head>
 <body>
   <main class="app">
@@ -20,6 +20,9 @@
         Select Area <span>(Click to start)</span>
       </header>
       <section id="map-2d" class="map-panel__canvas" aria-label="2D overview map"></section>
+      <button id="share-button" class="map-panel__share" type="button" aria-haspopup="dialog">
+        Share
+      </button>
       <button id="map-panel-resizer" class="map-panel__resizer" type="button" aria-label="Resize 2D map panel">
         <svg class="map-panel__resizer-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
           <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"></circle>
@@ -30,6 +33,10 @@
         </svg>
       </button>
     </aside>
+
+    <button id="map-placeholder" class="map-placeholder is-hidden" type="button">
+      Click to create your own
+    </button>
 
     <section id="info-panel" class="info-panel" role="status" aria-live="polite">
       <h1 class="info-panel__title">Hi there!</h1>
@@ -43,6 +50,30 @@
     </section>
 
     <section id="cesiumContainer" class="viewer" aria-label="3D block viewer"></section>
+
+    <div id="share-overlay" class="share-overlay" aria-hidden="true">
+      <div class="share-overlay__backdrop" data-share-dismiss></div>
+      <section class="share-overlay__panel" role="dialog" aria-labelledby="share-overlay-title" aria-describedby="share-overlay-description">
+        <header class="share-overlay__header">
+          <h2 id="share-overlay-title">Share this blockbild</h2>
+          <button id="share-overlay-close" class="share-overlay__close" type="button" aria-label="Close share dialog" data-share-dismiss>&times;</button>
+        </header>
+        <p id="share-overlay-description" class="share-overlay__description">
+          Copy and send the link below to challenge someone with this blockbild.
+        </p>
+        <label class="share-overlay__label" for="share-url-input">Shareable link</label>
+        <div class="share-overlay__field">
+          <input id="share-url-input" class="share-overlay__input" type="text" readonly value="" />
+          <button id="share-copy-button" class="share-overlay__copy" type="button">Copy</button>
+        </div>
+        <label class="share-overlay__option">
+          <input id="share-hide-map" type="checkbox" />
+          <span>Hide 2D map (puzzle mode)</span>
+        </label>
+        <p class="share-overlay__hint">With puzzle mode, recipients will not see the map.</p>
+        <output id="share-feedback" class="share-overlay__feedback" role="status" aria-live="polite"></output>
+      </section>
+    </div>
   </main>
 
   <noscript>
