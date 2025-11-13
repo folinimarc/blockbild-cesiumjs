@@ -9,6 +9,8 @@
   --panel-shadow: 0 12px 28px rgba(15, 23, 42, 0.35);
   --panel-subtext-opacity: 0.8;
   --accent-color: #4ea6de;
+  --map-control-size: 2.1rem;
+  --map-control-offset: 0.6rem;
 }
 
 * {
@@ -147,10 +149,10 @@ body {
 
 .map-panel__resizer {
   position: absolute;
-  left: 0.35rem;
-  bottom: 0.35rem;
-  width: 1.9rem;
-  height: 1.9rem;
+  left: var(--map-control-offset);
+  bottom: var(--map-control-offset);
+  width: var(--map-control-size);
+  height: var(--map-control-size);
   border: 1px solid rgba(255, 255, 255, 0.35);
   border-radius: 0.75rem;
   background: rgba(18, 22, 28, 0.86);
@@ -166,8 +168,8 @@ body {
 }
 
 .map-panel__resizer-icon {
-  width: 1.15rem;
-  height: 1.15rem;
+  width: calc(var(--map-control-size) * 0.6);
+  height: calc(var(--map-control-size) * 0.6);
   display: block;
 }
 
@@ -205,9 +207,9 @@ body {
 
 .map-panel__share {
   position: absolute;
-  bottom: 0.85rem;
-  right: 0.85rem;
-  padding: 0.4rem 0.7rem;
+  bottom: var(--map-control-offset);
+  right: var(--map-control-offset);
+  padding: 0 0.85rem;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -220,6 +222,10 @@ body {
   cursor: pointer;
   transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
   z-index: 11;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--map-control-size);
 }
 
 .map-panel__share:hover,
@@ -441,6 +447,7 @@ body {
   :root {
     --panel-width: min(90vw, 19rem);
     --panel-height: min(60vh, 19rem);
+    --map-control-offset: 0.75rem;
   }
 
   .map-panel {
@@ -451,8 +458,8 @@ body {
 
   .map-panel__share {
     left: auto;
-    right: 1rem;
-    bottom: 1rem;
+    right: var(--map-control-offset);
+    bottom: var(--map-control-offset);
     transform: none;
   }
 
@@ -474,14 +481,14 @@ body {
   }
 
   .map-panel__resizer {
-    width: 2.4rem;
-    height: 2.4rem;
-    left: 0.5rem;
-    bottom: 0.5rem;
+    width: var(--map-control-size);
+    height: var(--map-control-size);
+    left: var(--map-control-offset);
+    bottom: var(--map-control-offset);
   }
 
   .map-panel__resizer-icon {
-    width: 1.35rem;
-    height: 1.35rem;
+    width: calc(var(--map-control-size) * 0.6);
+    height: calc(var(--map-control-size) * 0.6);
   }
 }
