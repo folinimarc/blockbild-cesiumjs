@@ -1,7 +1,7 @@
 :root {
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --panel-width: 19rem;
-  --panel-height: 19rem;
+  --panel-height: 16rem;
   --panel-radius: 0.75rem;
   --panel-border-color: #555;
   --panel-header-bg: #333;
